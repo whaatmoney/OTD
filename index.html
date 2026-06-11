@@ -21,7 +21,7 @@ body{margin:0;background:var(--paper);color:var(--ink);
 .wrap{max-width:760px;margin:0 auto;padding:24px 20px 56px}
 .hdr{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px;
   padding-bottom:18px;border-bottom:1px solid var(--line)}
-.hleft{display:flex;gap:14px;align-items:flex-start}
+.hleft{display:flex;gap:14px;align-items:flex-start;flex:1 1 340px;min-width:0}
 .badge{flex:0 0 auto;margin-top:2px}
 .brand{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
 .brand .q{font-family:'Source Code Pro',monospace;font-weight:600;color:var(--blue);font-size:13px;letter-spacing:.04em}
@@ -51,7 +51,9 @@ h1{font-size:25px;line-height:1.1;margin:0;font-weight:600}
 .bignum{font-family:'Source Code Pro',monospace;font-weight:600;font-size:64px;line-height:.9}
 .herotxt{font-size:15px;color:var(--ink2);max-width:380px;line-height:1.5}
 .herotxt b{color:var(--ink)}
-.track{position:relative;height:10px;background:var(--line2);border-radius:6px;margin-top:20px}
+.pchip{display:inline-block;font-family:'Source Code Pro',monospace;font-size:10.5px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin:0 0 12px;background:var(--card)}
+.track{position:relative;height:10px;background:var(--line2);border-radius:6px;margin-top:34px}
+.goaltag{position:absolute;bottom:calc(100% + 5px);transform:translateX(-100%);font-family:'Source Code Pro',monospace;font-size:10.5px;color:var(--ink);white-space:nowrap}
 .track .fill{position:absolute;left:0;top:0;height:10px;border-radius:6px;transition:width .5s}
 .track .goal{position:absolute;top:-4px;height:18px;width:2px;background:var(--ink)}
 .tracklab{display:flex;justify-content:space-between;font-family:'Source Code Pro',monospace;font-size:10.5px;color:var(--ink3);margin-top:5px}
@@ -148,7 +150,7 @@ button{font:inherit}
     </div>
   </div>
 
-  <div class="foot">Formally, this score is <b>Current-Promise OTD</b> &mdash; pickup (will call) jobs scored on the date boxed and ready, carrier jobs on the date shipped, both against the promised date as it stands today. Updated Jun 10, 2026 · 10:16 PM PDT.</div>
+  <div class="foot">Scope: California &middot; 2026 year to date. Formally, this score is <b>Current-Promise OTD</b> &mdash; pickup (will call) jobs scored on the date boxed and ready, carrier jobs on the date shipped, both against the promised date as it stands today. Updated Jun 10, 2026 · 10:16 PM PDT.</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -199,6 +201,7 @@ function stats(ym){
 }
 const STRIP=MONTHS.map(m=>{const x=stats(m);return {ym:m,pct:x.pct,shipped:x.shipped};});
 
+const PULL_LAB=(()=>{const p=META.pull.split("-");return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+p[1]-1]+" "+(+p[2]);})();
 let SEL=CUR;
 let MODAL_JOBS=[];
 
@@ -299,11 +302,13 @@ function renderHero(s){
   }
   document.getElementById("sec-hero").innerHTML=
     "<div class='eyebrow'>Where we are \u00b7 "+monthName(SEL)+(isCur?" so far":"")+"</div>"
+    +(isCur?"<div class='pchip'>Partial month \u00b7 data through "+PULL_LAB+"</div>":"")
     +"<div class='hero'><div class='bignum' style='color:"+tier(s.pct)+"'>"+(s.shipped?s.pct.toFixed(1)+"%":"\u2014")+"</div>"
     +"<div class='herotxt'>"+txt+"</div></div>"
     +"<div class='track'><div class='fill' style='width:"+Math.min(100,s.pct)+"%;background:"+tier(s.pct)+"'></div>"
-    +"<div class='goal' style='left:"+GOAL+"%'></div></div>"
-    +"<div class='tracklab'><span>0</span><span style='color:var(--ink)'>\u2191 goal 98%</span></div>"
+    +"<div class='goal' style='left:"+GOAL+"%'></div>"
+    +"<div class='goaltag' style='left:"+GOAL+"%'>\u2191 goal 98%</div></div>"
+    +"<div class='tracklab'><span>0</span><span>100</span></div>"
     +(driver?"<div class='driver'>"+driver+"</div>":"");
 }
 function renderBuilt(s){
@@ -311,8 +316,8 @@ function renderBuilt(s){
   if(!s.shipped){el.innerHTML="";el.style.display="none";return;}
   el.style.display="";
   el.innerHTML="<div class='eyebrow'>How that number is built</div>"
-    +"<p class='body'>Every job has a date we promised. More than half our jobs are picked up at our counter, not shipped \u2014 a pickup job counts the day it\u2019s <b>boxed and ready</b>, because we can\u2019t ship a customer who isn\u2019t here. Carrier jobs count the day they leave. On or before the date, it counts. Add those up, divide by everything that went out.</p>"
-    +splitBar([{v:s.made,color:C.green,label:noun(s.made,"made the date")},{v:s.late,color:C.red,label:noun(s.late,"late")}])
+    +"<p class='body'>Every job has a date we promised. More than half our jobs are picked up at our counter, not shipped \u2014 a pickup job counts the day it\u2019s <b>boxed and ready</b>, because we can\u2019t ship a customer who isn\u2019t here. Carrier jobs count the day they leave. On or before the date, it counts. Add those up, divide by every job done that month.</p>"
+    +splitBar([{v:s.made,color:C.green,label:s.made+" made the date"},{v:s.late,color:C.red,label:s.late+" late"}])
     +"<p class='after' style='font-size:13.5px'>Of the <b>"+s.made+"</b> that made it, <b style='color:"+C.teal+"'>"+s.early+"</b> were done early and <b style='color:"+C.green+"'>"+s.onDay+"</b> hit the day exactly.</p>"
     +"<div class='mono' style='font-size:13.5px;color:var(--ink);margin-top:14px;background:var(--line2);border-radius:8px;padding:12px 14px'>"
     +s.made+" made it \u00f7 "+s.shipped+" done = <b style='color:"+tier(s.pct)+"'>"+s.pct.toFixed(1)+"%</b></div>";
@@ -323,9 +328,9 @@ function renderResched(s){
   el.style.display="";
   let h="<div class='eyebrow'>The reschedule rule</div>"
     +"<p class='body'>A job that waits in <b>MRB</b> on the customer\u2019s call earns the right to a new date \u2014 but only if the date actually gets moved. The schedule record shows which is which. Full rule below.</p>"
-    +splitBar([{v:s.neverResched,color:C.amber,label:noun(s.neverResched,"never rescheduled")},
-               {v:s.missedNew,color:C.purple,label:noun(s.missedNew,"missed the new date too")},
-               {v:s.floorLate,color:C.red,label:noun(s.floorLate,"late on the floor")}]);
+    +splitBar([{v:s.neverResched,color:C.amber,label:s.neverResched+" never rescheduled"},
+               {v:s.missedNew,color:C.purple,label:s.missedNew+" missed the new date too"},
+               {v:s.floorLate,color:C.red,label:s.floorLate+" late on the floor"}]);
   if(s.neverResched>0) h+="<p class='after'><b style='color:"+C.amber+"'>"+s.neverResched+"</b> of this month\u2019s misses sat in MRB long enough to earn a new date \u2014 and the schedule record confirms the date was never moved. Reschedule those the day they hit MRB and "+monthName(SEL)+" reads <b style='color:"+tier(s.ifResched)+"'>"+Math.round(s.ifResched)+"%</b>. That\u2019s schedule management, free.</p>";
   if(s.missedNew>0) h+="<p class='after' style='margin-top:12px'><b style='color:"+C.purple+"'>"+s.missedNew+"</b> got their reschedule and missed the moved date anyway. A new date only counts if it\u2019s a date we can keep \u2014 moving it isn\u2019t the fix, moving it to something real is.</p>";
   h+="<div class='btnrow'>";
